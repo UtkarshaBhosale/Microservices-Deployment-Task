@@ -304,6 +304,89 @@ kubectl get configmap -n microservice
 ![image](https://github.com/user-attachments/assets/19210e2a-8edc-43d2-b92e-40e8bf34724d)
 
 
+2 Create Deployment
+File: k8s/deployments/product-service.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  labels:
+    app: product-service
+    tier: product-service
+    environment: production
+  namespace: microservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+        tier: product-service
+        environment: production
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: product-service
+        image: securelooper/product-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3001
+        env:
+          - name: NODE_ENV
+            valueFrom:
+              configMapKeyRef:
+                name: product-service-configmap
+                key: NODE_ENV
+          - name: PORT
+            valueFrom:
+              configMapKeyRef:
+                name: product-service-configmap
+                key: PORT
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 40
+          periodSeconds: 5
+📌 Apply Deployment
+
+kubectl apply -f k8s/deployments/product-service.yaml
+🔍 Verify Pods
+
+kubectl get pods -n microservice
+📜 View Logs to Confirm Communication
+
+kubectl logs deploy/product-service -n microservice
+OR
+
+kubectl logs pod/<pod_name> -n microservice
+
+![image](https://github.com/user-attachments/assets/2fb5e79d-ec6a-479e-b423-c6c5503f876f)
+
+🐞 Describe Pod for Debugging and Event Inspection
+
+Use the following command to inspect pod details and events:
+kubectl describe pod/<pod_name> -n microservice
+
+
+
 
 
 
