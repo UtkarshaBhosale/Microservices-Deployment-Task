@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  labels:
+    app: order-service
+    tier: order-service
+    environment: production
+  namespace: microservices-task
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+        tier: order-service
+        environment: production
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: order-service
+        image: utkarsha0601/order-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3002
+        env:
+          - name: NODE_ENV
+            valueFrom:
+              configMapKeyRef:
+                name: order-service-configmap
+                key: NODE_ENV
+          - name: PORT
+            valueFrom:
+              configMapKeyRef:
+                name: order-service-configmap
+                key: PORT
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3002
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3002
+          initialDelaySeconds: 40
+          periodSeconds: 5

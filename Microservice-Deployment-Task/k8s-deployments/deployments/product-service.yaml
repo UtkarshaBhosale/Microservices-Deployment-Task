@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  labels:
+    app: product-service
+    tier: product-service
+    environment: production
+  namespace: microservices-task
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-service
+  template:
+    metadata:
+      labels:
+        app: product-service
+        tier: product-service
+        environment: production
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: product-service
+        image: utkarsha0601/product-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3001
+        env:
+          - name: NODE_ENV
+            valueFrom:
+              configMapKeyRef:
+                name: product-service-configmap
+                key: NODE_ENV
+          - name: PORT
+            valueFrom:
+              configMapKeyRef:
+                name: product-service-configmap
+                key: PORT
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 60
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 40
+          periodSeconds: 5
